@@ -1,0 +1,20 @@
+SimulationType                MonteCarlo
+NumberOfCycles                20000
+NumberOfInitializationCycles  0
+PrintEvery                    1000
+PrintPropertiesEvery          1000
+
+Forcefield                    AutomationScript
+
+Framework 0
+FrameworkName {MOF}
+RemoveAtomNumberCodeFromLabel no
+UnitCells {countABC}
+ExternalTemperature 298
+UseChargesFromCIFFile         yes
+
+Component 0 MoleculeName             CO2
+            MoleculeDefinition       CO2
+            IdealGasRosenbluthWeight 1
+            WidomProbability         1.0
+            CreateNumberOfMolecules  0
