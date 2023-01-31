@@ -1,0 +1,20 @@
+SimulationType                MonteCarlo
+NumberOfCycles                20000
+PrintEvery                    1000
+RestartFile                   no
+Forcefield                    {ForcefieldName}
+UseChargesFromCIFFile         yes
+Framework 0
+FrameworkName {MOF}
+Cutoff 12.5
+AddAtomNumberCodeToLabel yes
+UnitCells {countABC}
+ExternalTemperature {ExternalTemperature}
+ExternalPressure {ExternalPressure}
+Component 0 MoleculeName             CO2
+            MoleculeDefinition       CO2
+            TranslationProbability   0.5
+            RotationProbability      0.5
+            ReinsertionProbability   0.5
+            SwapProbability          1.0
+            CreateNumberOfMolecules  0
