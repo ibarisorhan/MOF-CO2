@@ -233,3 +233,131 @@ Models = {
     'LinearRegression': LinearRegression(),
     'BayesianRidge': BayesianRidge()
 }
+
+
+ml = Models['RandomForestRegressor']
+
+df = pd.read_csv('Co2WithVolumetricAtomTypes.csv')
+df = df.dropna()
+
+
+combinations = {
+    "A+B+C": baseline_descriptors,
+    "A+B+C+D":non_energetic_descriptors,
+    "A+B+C+E":baseline_descriptors + groups['E'],
+    "All":descriptors_all,
+         }
+
+
+TimePerMOF = {
+'Henry' : 3266.7949,
+'GCMC' : 10858,
+'EPoCh' : 0.00222222222222222,
+'Geometric' : 5.40777777777778,
+'AtomType&Chem': 0.000369699796040853}
+
+
+TPF = {"A+B+C": TimePerMOF['Geometric'] + TimePerMOF['AtomType&Chem'],
+"A+B+C+E": TimePerMOF['Geometric'] + TimePerMOF['AtomType&Chem'] + TimePerMOF['Henry'],
+"A+B+C+D":TimePerMOF['Geometric'] + TimePerMOF['AtomType&Chem'] + TimePerMOF['EPoCh'],
+"All":TimePerMOF['Geometric'] + TimePerMOF['AtomType&Chem'] + TimePerMOF['EPoCh'] + TimePerMOF['Henry'],}
+
+
+def feature_importance_figure1():
+    width = 0.25
+    fig, ax = plt.subplots(figsize = (10,8),dpi = 700)
+
+    X,y = X_y_from_pressure(df,40,non_energetic_descriptors)
+    ind = np.arange(len(X.columns))
+    feature_names_intermediate = list(X.columns)
+    feature_names = []
+    for i in feature_names_intermediate:
+        if 'Flux' in i:
+            n = "Epoch" + i[4:] 
+            feature_names.append(n)
+        elif "_15prb" in i:
+            n = i[:-6]
+            feature_names.append(n)
+        else:
+            feature_names.append(i)
+            
+
+    ml.fit(X,y)
+    importances = ml.feature_importances_
+    ax.barh(ind-width,importances,width,label="40Pa")
+
+    X,y = X_y_from_pressure(df,1000,non_energetic_descriptors)
+    ml.fit(X,y)
+    importances = ml.feature_importances_
+    ax.barh(ind,importances,width,label="1000Pa")
+
+    X,y = X_y_from_pressure(df,4000,non_energetic_descriptors)
+    ml.fit(X,y)
+    importances = ml.feature_importances_
+    ax.barh(ind+width,importances,width,label="4000Pa")
+
+    ax.set_title("Feature importances using MDI")
+    plt.yticks(ind,[descriptors_all_rename[i] for i in feature_names])
+    ax.set_xlabel("Mean decrease in impurity")
+    plt.legend()
+    fig.tight_layout()
+    plt.show()
+
+
+def feature_importance_figure2():
+    width = 0.25
+    fig, ax = plt.subplots(figsize = (10,8),dpi = 700)
+
+    X,y = X_y_from_pressure(df,40,descriptors_all)
+    ind = np.arange(len(X.columns))
+    feature_names = list(X.columns)
+            
+    ml.fit(X,y)
+    importances = ml.feature_importances_
+    ax.barh(ind-width,importances,width,label="40Pa")
+
+    X,y = X_y_from_pressure(df,1000,descriptors_all)
+    ml.fit(X,y)
+    importances = ml.feature_importances_
+    ax.barh(ind,importances,width,label="1000Pa")
+
+    X,y = X_y_from_pressure(df,4000,descriptors_all)
+    ml.fit(X,y)
+    importances = ml.feature_importances_
+    ax.barh(ind+width,importances,width,label="4000Pa")
+
+    ax.set_title("Feature importances using MDI")
+    plt.yticks(ind,feature_names)
+    ax.set_xlabel("Mean decrease in impurity")
+    plt.legend()
+    fig.tight_layout()
+    plt.show()
+
+def show_RMSE_and_R2_metrics(s):
+    fig, ax = plt.subplots(1,2,dpi=700,figsize = (12,6),layout='constrained')
+
+    ind = 0
+
+    for col in ['RMSE','R2']:
+        
+        ax[ind].set_ylabel(col)
+        if col == "R2":
+            ax[ind].set_ylabel("$R^2$")
+        multiplier = 0
+        width = 0.25  # the width of the bars
+        for p in [40,1000,4000]:
+            cs = s[s.Pressure == p] #current s
+            offset = width * multiplier
+            x = np.array(list(range(len(cs.Features))))
+            
+            rects = ax[ind].bar(x -width + offset, cs[col], width, label=f"{p} Pa")
+            #ax[ind].bar_label(rects, padding=3)
+            title = f"({chr(97 + ind)})"
+            ax[ind].set_title(title,loc='left')
+            multiplier += 1
+        ax[ind].legend()
+        ax[ind].set_xticks(list(range(len(list(cs.Features)))))
+        ax[ind].set_xticklabels(list(cs.Features),rotation = -45)
+        
+        ind +=1
+    plt.show()
